@@ -1,0 +1,536 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 13.04.2 ] */
+
+/* [wxMaxima: input   start ] */
+log2(x):=log(x)/log(2);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: title   start ]
+N-grams evaluation
+   [wxMaxima: title   end   ] */
+
+/* [wxMaxima: section start ]
+Occurence
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: subsect start ]
+Total number of n-order n-grams in corpus
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: input   start ] */
+N=L+1-n;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+Number of occurences (or max. repeat factor) of one n-gram
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: input   start ] */
+R=L/n;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+Max. possible number of unique n-grams
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: input   start ] */
+sum(min(L+1-n, binomial(h, n)),n,1,L)=L^2;
+float(%),L=100,R=2,h=195,simpsum;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+load(zeilberger)$
+load("solve_rec")$
+sum(L+1-n, n,1,L);
+%,simpsum;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+All substrings of a string
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+A string of length L contains L possible substring lengths (from 1 to L)
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: comment start ]
+To find all substrings of a string, we start with position 1 (the beginning of the string),
+ generate or scan substrings of all lengths from this position up to the L (L substrings),
+then move to position 2 and generate all (L-1 in total) substrings from this position,
+and so on:
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+S1: sum(n,n,1,L), simpsum;
+ratsimp(%-sum(n,n,1,L/2)),simpsum;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+Some of those substrings will be unique, but some will repeat. The maximum
+repeat rate happens when the string is a repetition of one symbol.
+In this case, the number of unique substrings equals to the number of lengths, 
+which is L. It is well known, that such text can be written with
+log2(L) bits (BWT). 
+
+We replace L with XX, where X is a reference to the word of length L/2 in the dictionary.
+L/2 will be replaced with YY, where Y refers the word of length L/4,
+or, when L/2 is an odd number, with YZ, where Z represents the word of length L/4+1.
+Here we get logarithmic pattern close to:
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+sum(2*h,n,1,log(L));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+where h represents number of bytes required to write X, Y, Z, etc. 
+Let's put aside the dictionary compression can problem for a moment.
+Redundancy of a string is L in case of a simplest possible string, 
+and (S1) in the case when there are no identical substrings at all,
+in which case the text can be written only as L.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+[S1*x=L];
+solve(%,x);
+N*x,%;
+float(%),N=29276,L=506;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+Substrings of S represent a set of all possible dictionaries over S. 
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+P(sigma[n]) = product(P(sigma[i]),i,1,n);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: section start ]
+Recursive vs. plain dictionary
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: comment start ]
+Take example where we encounter 'abcd' 2 times, 'ab' 3 times and 'cd' 3 times. With a recursive dictionary, we encode
+'ab'='x' and 'cd'='y', and then encode 'abcd' as 'xy'='z'. With a plain dictionary, however, we encode 'abcd'='z'.
+
+Dictionary overhead is 1 + n for plain dictionary and 1 + (recursive overhead), and here arises the problem of what is
+more effective: to represent 'abcd' as a single entry or as a combination of more ubiquitous 'ab' and 'cd'.
+
+Greedy algorithms always prefer large-order n-grams. But even with a recursive dictionary, smaller order n-grams
+can give better compression due to more compact dictionary. Instead of maximal order, in both cases of plain dictionary p 
+and recursive dictionary r we must choose maximal Save.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+Save[p]=n*R-R-O[p];
+%, O[p]=n+1;
+Cr[p]=n*R/(n*R-Save[p]),%;
+Save[r]=n*R-R-O[r];
+%, O[r]=(log(n)+1)+1;
+Cr[r]=n*R/(n*R-Save[r]),%;
+float(%), n=L/2,R=2;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+More complex formula takes into consideration entropy increase due
+to the dictionary enlargement (we assume ideal encoder, that encodes
+each symbol sigma with -log2(P(sigma)) bits:
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+Save[r]=n*R-R-O[r];
+%, O[r]=log(n)+1;
+radcan(log2(h)*L/(log2(h+1)*(L-Save[r]))),%;
+solve(1=%,R)[1];
+float(%),h=205,L=1e8,n=100;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[log2(h)*L/(log2(h+1)*(L-Save[p])), Save[p]=(n[A]+n[B])*(R+1)+x-R-O[p],O[p]=n[A]+n[B]+2];
+[%[1],%[2]],%[3];
+radcan(%[1]),%[2];
+solve(1=%,R);
+float(%),h=205,L=1e8,n[A]=50,n[B]=50,x=25;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: section start ]
+Unique n-grams
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: subsect start ]
+Subgrams
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+If a word never occures in corpus outside of some larger word, 
+it is called fully dependent subword of the the larger one
+(the superword). Fully dependent word is reduntant when the superword is used. 
+If we consider only one corpus, every word is a fully 
+dependent word of the corpus itself. 
+
+However, whether the superword is used depends on chosen text representation scheme.
+In this regard, fully dependent n-gram is relevant only to those word structures,
+in which its superword is not present as an atom.
+
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: section start ]
+Total n-grams algorithm
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: subsect start ]
+Quick text replace
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+1. Represent text as a linked list. 2. Add quick access over hash of first two bytes of a n-gram,
+which makes access h^2 times faster. Converting text cost = C; replacing ngram = R; matching = M;
+searching = S; delinking = D outputting text = O.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+[Theta = Theta[C]+Theta[R]*N+Theta[O], Theta[R]=Theta[S]*Theta[M]+Theta[D]*R];
+%[1],%[2];
+%,Theta[S]=L/h^2,Theta[O]=L,Theta[M]=log(n),Theta[D]=n,Theta[C]=L;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+Lean n-gram finding
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Check (n-1)-gram availability. For every position in text, after all super-grams have been registered,
+decrement the reference n-gram.  Build n-grams in blocks of sizes n .. n+x, where x is some constant.
+When reference n-gram is not available, break all block computation.
+
+(We need only one n-gram: the best one. We replace its occurence in the text with
+a dictionary reference, append dictionary to the text and research for the next best n-gram.) Sounds nice,
+but requires too high processing. Instead, when we completely isolate definitions from the text, we can use unprefixed
+dictionary references in the text, which saves space, and obtain linear time algorithmic complexity.
+
+During the search, we set occurence threshold depending on the best achieved result as far. No, we don't.
+We use smaller n-grams for prediction during building of longer ones. The best result is useless for thresholding,
+as longer n-grams can have better result with lower occurence.
+
+Threshold eliminates complete branches of various-order ngrams that occure less than threshold times. If
+the best compression rate hides in higher-order n-grams with lower occurence, we will lose it. But how probable
+is it? Highly probable.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+ap: Cr[p]=(n*R)/(R+n+1);
+plot3d(ap,[n,2,100],[R,2,100]);
+bp: solve(ap,R)[1];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ar: Cr[r]=(n*R)/(R+log(n)+2);
+br: solve(ar,R)[1];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ar, R=2, n=L/2;
+br, %, n=L/20;
+float(%),L=1e8;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+For example, we found a trigram that repeats 56 times. Its compression rate will be 14/5. Any 4-gram has to occure at least
+12 times to give a better compression rate. It means that from now on we can abort search for a 4-gram as soon as
+there are no building blocks for 12 repetitions. Unfortunately, we need to calculate all 4-grams anyway, as building
+blocks for future (4+n)-grams, as minimal required rate of occurence for them will be lower. It means we should 
+calculate lowest and largest n first, and then go up and down.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+a, n=3, R=56;
+b, %, n=4;
+float(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: section start ]
+Patterns
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: comment start ]
+Patterns occure when we can effectively describe one n-gram in terms of one or more
+other n-grams. 
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: subsect start ]
+Instance (...A...) pattern
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+This pattern discards everything except A.
+The most powerful pattern in real life. Unfortunately, less 
+useful for lossless compression. It gives no text reduction; 
+instead, it reduces the dictionary, which also can be useful.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+radcan(log2(h)*(L+D)/(log2(h-1)*(L+R))),D=3;
+float(%),h=20,R=1,L=1e2;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+Relative compression gain due to description of a low occuring n-gram 
+in terms of two independently occuring n-grams. .
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: subsect start ]
+Finit sequence (A..B) pattern
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Sequence arises when content between A and B
+can be effectively described as a function of A and B.
+The simplest case of A..B is, of course, AB.
+
+More generally, finite sequence is an example of the
+Instance pattern, where X can be described in terms of Y.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: subsect start ]
+Template (A%B) pattern
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: input   start ] */
+(A+(AB)*n+B)*x;
+[c[AB]=N*R,c[A]=(N+1)*R];
+solve(%,c[AB]);
+ratsimp(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+,This pattern occures in series A%B..A%B..A%B,
+where '%' is an arbitrary text, while '..' is an
+above mentioned sequence pattern.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+Save[r]=(n[A]+n[B])*R+n[A]+n[B]-R-1-O[r];
+%, O[r]=log(n[A])+log(n[B])+2;
+((n[A]+n[B])*R+n[A]+n[B])/((n[A]+n[B])*R+n[A]+n[B]-Save[r]),%;
+float(%), n[A]=32,n[B]=3,R=17;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[Er=log2(h)*L/(log2(h+1)*(L-Save[p])), Save[p]=(n[A]+n[B])*(R+1)-R-O[p],O[p]=n[A]+n[B]+2];
+[%[1],%[2]],%[3];
+radcan(%[1]),%[2];
+solve(%,R);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+D*log(D)*X+N*log(N)*Y;
+solve(%,X);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[C1,C2], C1=L*log(L)*L/D, C2=D*log(D)*L;
+wxplot2d(%,[D,550,560]),L=160391;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+(L*log(L)*L/D)-(D*log(D)*L),D=exp(log(L)/log(L));
+wxplot2d(%,[L,10,1e8]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+log(1e8);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+L*log(L)*L/D=D*log(D)*L;
+%, D=exp(log(L)/(1+log(L)/(1+log(L))));
+float(%),L=10000;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+float(log(90));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+exp(log(A)*B);
+radcan(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+sum(P[c]*log(P[c]),c,1,n),P[c]=N/n;%,simpsum;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+load(simplify_sum)$
+simplify_sum(sum(P[i]*log(P[i]),i,1,n)),P[c]=C[i]/n;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: section start ]
+Arithmetic coding
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: subsect start ]
+Frequency tables
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Выгоднее начинать с меньшей вариации: char+count+delim
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+log2(N+1)*(h+1)+log2(Sigma)*h=log2(N)*h+log2(Sigma+1)*(h+1);
+float(%),N=10000,Sigma=256,h=15;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+0. N_sigma: Максимальное количество вхождений символа (count max). 2 - L/2. Для enwik известно заранее.
+0. N_omega: Макс. вхождение символа junk. Известно заранее.
+0. h: local alphabet size
+0. Sigma: Alphabet size
+0. Omega: Junk alphabet size
+0. : Chunk size
+0. 
+
+Принцип разделения режимов и максимального уменьшения энтропии внутри режима.
+1. Junk entries: 
+2. Selector: Ref | JunkRef | Entry | JunkEntry.
+3. Ref: 1 - h;
+3. Junk 1 - N_j;
+3. Entry 1 - Sigma, 1 - N_sigma;
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+data: [Zeta=162, L[sigma]=40736, Sigma=1707, gamma=4, omega[sigma]=18, omega[zeta]=716, L[zeta]=7670, log[2] = log2];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+JDS*JDN+DES*DEN+DRS*DRN+JS*JN+CS*CN, 
+%, JDS = log[2](Zeta)+log[2](omega[zeta]), JDN = Zeta,;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+General gain borderline for specifiyng Omega variability zeta,
+followed by Omega uses of it.
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: input   start ] */
+(log(Omega)+log(zeta)*Omega)/log(Omega)*Omega=1;
+radcan(solve(%,zeta));
+wxplot2d(rhs(%[1]),[Omega,1,15]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+When Omega/zeta is less than this borderline, it is shorter to specify zeta. As we can see,
+it is true virtually in all cases.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+enc: ((log[2](j)+log[2](J))*j+log[2](j)*(k-j)+log[2](h)*(N-Sigma)+(log[2](Sigma)+log[2](M))*Sigma+log[2](gamma)*(j+N)+log[2](N/h)*(N/h));
+float(%/8), h=10, j=161, N=24939, Sigma=2532, gamma=4, M=18, J=716, k=7670, log[2] = log2;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+Optimal page size
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Using dictionary replacement, we can
+a) list entry points besides each word in the dictionary (so called index)
+b) Place dictionary references in the text in place of original terms
+c) Generalizing both approaches, split text to pages of N dictionary entries each,
+and use footnotes instead of global entries. Then, we can decrease overall entropy 
+by arranging the pages in the lexical order, and keeping their original order as a
+separate information.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+cs: log[2](N)*N+log[2](h)*(L-Sigma), N=L/(h*Sigma^(h^(10)/Sigma^(10)));
+wxplot2d(cs,[h,1,30]), log[2]=log2, L=24939, Sigma=2532;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+As we can see, There exists rather small optimal page size of about 10 unique symbols.
+Another possible approach would be to use entropy as a page size measure instead of
+symbol range. Intuitevly, it can bring some gain. Unfortunately, ignorance does not 
+allow me to say how to harvest it.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: subsect start ]
+Page index
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Rather than absolute index, we use command 'insert before the chunk #X'.
+This reduces variability to the number of previous chunks + 1.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+W=sum(log(n+1),n,1,N),simpsum;
+simplify_sum(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+n*log[2](n)/log[2](n!);
+wxplot2d(%,[n,5,100]), log[2] = log2, Sigma=3;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+This way we get solid gain when the number of chunks is very small, which
+suggests an exponential text growing approach: What if we use
+small chunks, then make larger ones from them, and finally
+build the original text? First of all, log(N!) is always larger than N,
+and equals N*log(N) when N->inf
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+wxplot2d([N/log2(N!),N*log2(N)/log2(N!)],[N,3,30]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+limit(N*log(N)/log(N!),N,inf);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+find_root(cs, h, 1, Sigma), log[2]=log2, L=24939, Sigma=2532;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[h=1, N=L],[h=Sigma, N=1];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[h=1, p=0], [h=Sigma, p=1];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+L/Sigma^(h^(L/Sigma)/Sigma^(L/Sigma))/h;
+wxplot2d(%,[h,1,Sigma]),Sigma=2532,L=24539;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+h is the number of distinct sigmas one chunk contains.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+((n[sigma]+n[omega])*w(h[sigma]+h[omega]))/(n[sigma]*w(h[sigma])+n[omega]*w(h[omega])+n[omega]*2);
+%, w=log[2];
+wxplot3d([1,%,[n[sigma],50,500],[n[omega],50,500]]),h[sigma]=n[sigma]/2,h[omega]=205,log[2]=log2;
+float(%), n[sigma]=256, n[omega]=256, h[sigma]=230, h[omega]=88;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+As we see, second method is more compact when ref number n_sigma > junk number n_omega
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+log[2](h[j]+1)*(n[j]+1)/(log[2](h[j])*n[j]+n[j]);
+wxplot2d([1,%],[n[j],1,10]), log[2]=log2,h[j]=205;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+As we can see, prefixing each letter is more compact for junk sequences of up to 7 letters. At
+a closer look, it depends on entropy efficiency.
+   [wxMaxima: comment end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$
