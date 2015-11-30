@@ -1,6 +1,22 @@
 /* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
 /* [ Created with wxMaxima version 13.04.2 ] */
 
+/* [wxMaxima: title   start ]
+Structural redundancy
+   [wxMaxima: title   end   ] */
+
+/* [wxMaxima: comment start ]
+Structure is very important for understanding of the document, because it 
+extends meaning of a word by a context in which it is used.
+This way, structure is a way of compact notation. We 
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: comment start ]
+- xml indent
+- xml endings
+- Capital letter at the beginning of a sentence (after . or [ or { or >)
+   [wxMaxima: comment end   ] */
+
 /* [wxMaxima: input   start ] */
 log2(x):=log(x)/log(2);
 /* [wxMaxima: input   end   ] */
@@ -383,45 +399,63 @@ float(%),N=10000,Sigma=256,h=15;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: comment start ]
-0. N_sigma: Максимальное количество вхождений символа (count max). 2 - L/2. Для enwik известно заранее.
-0. N_omega: Макс. вхождение символа junk. Известно заранее.
+0. omega_sigma: Максимальное количество вхождений символа (count max). 2 - L/2. Для enwik известно заранее.
+0. omega_zeta: Макс. вхождение символа junk. Известно заранее.
 0. h: local alphabet size
 0. Sigma: Alphabet size
-0. Omega: Junk alphabet size
+0. Zeta: Junk alphabet size
 0. : Chunk size
 0. 
 
 Принцип разделения режимов и максимального уменьшения энтропии внутри режима.
-1. Junk entries: 
+1. Junk entries: Letter + mu + sigma
 2. Selector: Ref | JunkRef | Entry | JunkEntry.
 3. Ref: 1 - h;
 3. Junk 1 - N_j;
 3. Entry 1 - Sigma, 1 - N_sigma;
+
+Arithmetic coding compactly represents random data by making use of available
+ statistical properties. We can use FFT-smoothed representation to model
+probabilities for arithmetic coding, achieving high rates of lossless compression.
+In order to do that, we split text into Sigma dimensions, each of which represents
+probability of symbol sigma at every place in the text.
    [wxMaxima: comment end   ] */
 
 /* [wxMaxima: input   start ] */
-data: [Zeta=162, L[sigma]=40736, Sigma=1707, gamma=4, omega[sigma]=18, omega[zeta]=716, L[zeta]=7670, log[2] = log2];
+data: [Zeta=162, L[sigma]=40736, Sigma=1707, gamma=4, 
+omega[sigma]=18, omega[zeta]=716, L[zeta]=7670, N[sigma]=8603,
+h[sigma]=10, 
+log[2]=log2];
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-JDS*JDN+DES*DEN+DRS*DRN+JS*JN+CS*CN, 
-%, JDS = log[2](Zeta)+log[2](omega[zeta]), JDN = Zeta,;
+JDS*JDN+DES*DEN+DRS*(DRN-DEN)+JS*(JN-JDN)+CS*CN+PS+PN, 
+JDS = log[2](Zeta)+mu+upsilon, JDN = Zeta,
+JS = log[2](h[zeta]), JN = L[zeta],
+DES = log[2](Sigma), DEN = L[sigma],
+DRS = log[2](h[sigma]), DRN=L[sigma],
+CS=2, CN=WN*2,
+PS=log(L[sigma]/h[sigma]), PN=L[sigma]/h[sigma] $
+%, WN=N[sigma],
+mu=log(L[zeta]), upsilon=log(L[zeta]),
+h[zeta]=Zeta*5/7;
+float(%/8),data;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: subsect start ]
-General gain borderline for specifiyng Omega variability zeta,
-followed by Omega uses of it.
+General gain borderline for specifiyng local Omega variability zeta,
+followed by Omega/n uses of it, compared to a simple Omega use.
    [wxMaxima: subsect end   ] */
 
 /* [wxMaxima: input   start ] */
-(log(Omega)+log(zeta)*Omega)/log(Omega)*Omega=1;
+(log(Omega)*(Omega/n)+log(zeta)*Omega)/log(Omega)*Omega=1;
 radcan(solve(%,zeta));
-wxplot2d(rhs(%[1]),[Omega,1,15]);
+wxplot2d(rhs(%[1]),[Omega,1,15]), n=Omega;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: comment start ]
 When Omega/zeta is less than this borderline, it is shorter to specify zeta. As we can see,
-it is true virtually in all cases.
+it is true virtually in all cases for single specification (i.e. when n=Omega).
    [wxMaxima: comment end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -444,16 +478,21 @@ separate information.
    [wxMaxima: comment end   ] */
 
 /* [wxMaxima: input   start ] */
-cs: log[2](N)*N+log[2](h)*(L-Sigma), N=L/(h*Sigma^(h^(10)/Sigma^(10)));
+cs: log[2](N)*N+log[2](h)*(L-Sigma), N=L/h;
 wxplot2d(cs,[h,1,30]), log[2]=log2, L=24939, Sigma=2532;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: comment start ]
 As we can see, There exists rather small optimal page size of about 10 unique symbols.
-Another possible approach would be to use entropy as a page size measure instead of
-symbol range. Intuitevly, it can bring some gain. Unfortunately, ignorance does not 
-allow me to say how to harvest it.
+Another possible approach would be to use the entropy as a page size measure instead of
+symbol range. Intuitevly, it can bring some gain. Unfortunately, I don't understand how 
+to arrange that.
    [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+diff(cs,h)=0, log[2]=log2;
+radcan(solve(%,h)[1]);
+/* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: subsect start ]
 Page index
@@ -530,6 +569,71 @@ wxplot2d([1,%],[n[j],1,10]), log[2]=log2,h[j]=205;
 /* [wxMaxima: comment start ]
 As we can see, prefixing each letter is more compact for junk sequences of up to 7 letters. At
 a closer look, it depends on entropy efficiency.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: subsect start ]
+Modes evaluation
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Toy problem: 2 regimes: 1 and 2. In regime 1 there are messages: X and Y, and in regime 2 -- U and V.
+For example, a game: normal mode, one says 'silence' and enters game mode. In game mode, one 
+says 'silence' when others say something and takes money as the winner. Due to modes, same messages
+can have distinct meaning and this is the reason of modes. Variability Omega depends on number of
+modes Psi the same way as it depends on number of symbols Sygma:
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+Omega = Sigma * Psi;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: subsect start ]
+Modal context vs. natural context
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Modal context is an implicit mode, that dictates meaning of a symbol.
+Modal contexts use same symbols for different meanings,
+and this way extend symbol entropy.
+
+Natural context is a function that maps input to output. This differs
+from modal context in that natural context also has a grammar, which
+allows to filter meaningful events from junk. I call it natural because
+in nature application brings context, while modal context is just a tool
+for compact text arrangement.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: section start ]
+Lossless compression vs. lossy one
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: subsect start ]
+Wikipedia example
+   [wxMaxima: subsect end   ] */
+
+/* [wxMaxima: comment start ]
+Wikipedia text is written in wiki language, wiki engine transforms it for an html parsing engine,
+which in turn transforms it into an object tree that has many properties, most of which
+are kept as defaults inside one of the two engines. Wikipedia text is not explicit without
+both a wiki engine and a browser. Furthermore, English rules are also implicit; for example, the
+grammar rules and the dictionary for a text we keep in our mind. 
+
+Imagine that we have a perfect notation for lossless compression, in a sense that it is unsupassingly
+compact. This notation can eliminate redundancies proper to both Wiki and HTML languages, as well as
+to the English. But in order to fully use its power, we need first to decompress the wikipedia text:
+to rewrite each symbol explicitely, freeing it from dependence on a modal context, and then recompress
+the whole text in a more compact way. Of course, the resulting text will be much larger than the original,
+because during decompression we will add to it all implicit information, including engines' defaults,
+such as the color of hyperlinks and the shapes of font glyphs. 
+
+The problem is, a wikipedia text is meant
+to be readable directly -- the font shape is not a part of it -- it is lossy compressed. The question is, when we
+care of all the details? -- When we have absolutely no clue of intended way of use.
+In that case, we have no information that allows to decide which details are irrelevant. But that
+is never the case.
+
+As we can see, lossless compression is mostly the rearrangement of the lossy compressed data.
+
    [wxMaxima: comment end   ] */
 
 /* Maxima can't load/batch files which end with a comment! */

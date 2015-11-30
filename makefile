@@ -1,10 +1,10 @@
-all: run2
+all: compr
 
 compr: daldon
 	./daldon &&\
 		fp8 -8 rules.c &&\
 		fp8 -8 rules.h &&\
-		ls -lS 2k rules.c.fp8 rules.h.fp8
+		ls -lS ok.fp8 2k.fp8 rules.c.fp8 rules.h.fp8
 
 run2: daldon
 	./daldon 2>&1|tee tmp &&\

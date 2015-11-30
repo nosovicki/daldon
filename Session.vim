@@ -32,36 +32,36 @@ vnoremap . :normal .
 inoremap ¯ =CleverTab()
 nmap K <Plug>ManPageView
 vmap [% [%m'gv``
-nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
-nmap <silent> \tt \WS:AlignCtrl mIp1P1=l \\\@<!& \\\\:'a,.Align\WE
-nmap <silent> \tsq \WS:'a,.ReplaceQuotedSpaces:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).substitute(submatch(2),'\s\+','@','g')/:AlignCtrl mIp0P0=l @:'a,.Align:'y+1,'z-1s/[%@]/ /g\WE
-nmap <silent> \tsp \WS:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\s\+','@','g'),'\')/:AlignCtrl mI=l @:'a,.Align:'y+1,'z-1s/@/ /g\WE
-nmap <silent> \tab \WS:'a,.s/^\(\t*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\t','@','g'),'\')/:AlignCtrl mI=l @:'a,.Align:'y+1,'z-1s/@/ /g\WE
-nmap <silent> \t? \WS:AlignCtrl mIp0P0=l ?:'a,.Align:.,'zs/ \( *\);/;\1/ge\WE
-nmap <silent> \t= \WS:'a,'zs/\s\+\([*/+\-%|&\~^]\==\)/ \1/e:'a,'zs@ \+\([*/+\-%|&\~^]\)=@\1=@ge:'a,'zs/==/``/ge:'a,'zs/!=/!`/ge'zk:AlignCtrl mIp1P1=l =:AlignCtrl g =:'a,'z-1Align:'a,'z-1s@\([*/+\-%|&\~^!=]\)\( \+\)=@\2\1=@ge:'a,'z-1s/\( \+\);/;\1/ge:'a,'z-1v/^\s*\/[*/]/s/\/[*/]/@&@/e:'a,'z-1v/^\s*\/[*/]/s/\*\//@&/e'zk\t@:'y,'zs/^\(\s*\) @/\1/e:'a,'z-1s/`/=/ge:'y,'zs/ @//eg\WE
-nmap <silent> \t< \WS:AlignCtrl mIp0P0=l <:'a,.Align\WE
-nmap <silent> \t; \WS:AlignCtrl mIp0P0=l ;:'a,.Align:.,'zs/ \( *\);/;\1/ge\WE
-nmap <silent> \t: \WS:AlignCtrl mIp1P1=l ::'a,.Align\WE
-nmap <silent> \ts, \WS:AlignCtrl mIp0P0=l ,:'a,.Align:'a,.s/\(\s*\),/,\1/ge\WE
-nmap <silent> \t, \WS:AlignCtrl mIp0P1=l ,:'a,.Align\WE
-nmap <silent> \t| \WS:AlignCtrl mIp0P0=l |:'a,.Align\WE
-nmap <silent> \Tsp \WS:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\s\+','@','g'),'\')/:AlignCtrl mI=r @:'a,.Align:'y+1,'z-1s/@/ /g\WE
-nmap <silent> \T@ \WS:AlignCtrl mIp0P0=r @:'a,.Align\WE
-nmap <silent> \T= \WS:'a,'z-1s/\s\+\([*/+\-%|&\~^]\==\)/ \1/e:'a,'z-1s@ \+\([*/+\-%|&\~^]\)=@\1=@ge:'a,'z-1s/; */;@/e:'a,'z-1s/==/``/ge:'a,'z-1s/!=/!`/ge:AlignCtrl mIp1P1=r = @:AlignCtrl g =:'a,'z-1Align:'a,'z-1s/; *@/;/e:'a,'z-1s/; *$/;/e:'a,'z-1s@\([*/+\-%|&\~^]\)\( \+\)=@\2\1=@ge:'a,'z-1s/\( \+\);/;\1/ge:'a,'z-1s/`/=/ge\WE\acom
-nmap <silent> \T< \WS:AlignCtrl mIp0P0=r <:'a,.Align\WE
-nmap <silent> \T: \WS:AlignCtrl mIp1P1=r ::'a,.Align\WE
-nmap <silent> \Ts, \WS:AlignCtrl mIp0P1=r ,:'a,.Align:'a,.s/\(\s*\),/,\1/ge\WE
-nmap <silent> \T, \WS:AlignCtrl mIp0P1=r ,:'a,.Align\WE
-nmap <silent> \T| \WS:AlignCtrl mIp0P0=r |:'a,.Align\WE
-nmap <silent> \Htd \WS:'y,'zs%<[tT][rR]><[tT][dD][^>]\{-}>\|</[tT][dD]><[tT][dD][^>]\{-}>\|</[tT][dD]></[tT][rR]>%@&@%g'yjma'zk:AlignCtrl m=Ilp1P0 @:'a,.Align:'y,'zs/ @/@/:'y,'zs/@ <[tT][rR]>/<[tT][rR]>/ge:'y,'zs/@//ge\WE
-nmap <silent> \anum \WS:'a,'zs/\(\d\)\s\+\(-\=[.,]\=\d\)/\1@\2/ge:AlignCtrl mp0P0:'a,'zAlign [.,@]:'a,'zs/\([-0-9.,]*\)\(\s*\)\([.,]\)/\2\1\3/g:'a,'zs/@/ /ge\WE
-nmap <silent> \adef \WS:AlignPush:AlignCtrl v ^\s*\(\/\*\|\/\/\):'a,.v/^\s*\(\/\*\|\/\/\)/s/^\(\s*\)#\(\s\)*define\s*\(\I[a-zA-Z_0-9(),]*\)\s*\(.\{-}\)\($\|\/\*\)/#\1\2define @\3@\4@\5/e:'a,.v/^\s*\(\/\*\|\/\/\)/s/\($\|\*\/\)/@&/e'zk\t@'yjma'zk:'a,.v/^\s*\(\/\*\|\/\/\)/s/ @//g\WE
-nmap <silent> \adec \WS:'a,'zs/\([^ \t/(]\)\([*&]\)/\1 \2/e:'y,'zv/^\//s/\([^ \t]\)\s\+/\1 /ge:'y,'zv/^\s*[*/]/s/\([^/][*&]\)\s\+/\1/ge:'y,'zv/^\s*[*/]/s/^\(\s*\%(\h\w*\s\+\%([a-zA-Z_*(&]\)\@=\)\+\)\([*(&]*\)\s*\([a-zA-Z0-9_()]\+\)\s*\(\(\[.\{-}]\)*\)\s*\(=\)\=\s*\(.\{-}\)\=\s*;/\1@\2#@\3\4@\6@\7;@/e:'y,'zv/^\s*[*/]/s/\*\/\s*$/@*\//e:'y,'zv/^\s*[*/]/s/^\s\+\*/@@@@@* /e:'y,'zv/^\s*[*/]/s/^@@@@@\*\(.*[^*/]\)$/&@*/e'yjma'zk:AlignCtrl v ^\s*[*/#]\t@:'y,'zv/^\s*[*/]/s/@ //ge:'y,'zv/^\s*[*/]/s/\(\s*\);/;\1/e:'y,'zv/^#/s/# //e:'y,'zv/^\s\+[*/#]/s/\([^/*]\)\(\*\+\)\( \+\)/\1\3\2/e:'y,'zv/^\s\+[*/#]/s/\((\+\)\( \+\)\*/\2\1*/e:'y,'zv/^\s\+[*/#]/s/^\(\s\+\) \*/\1*/e:'y,'zv/^\s\+[*/#]/s/[ \t@]*$//e:'y,'zs/^[*]/ */e\WE
-nmap <silent> \ascom \WS:'a,.s/\/[*/]/@&@/e:'a,.s/\*\//@&/e:silent! 'a,.g/^\s*@\/[*/]/s/@//ge:AlignCtrl v ^\s*\/[*/]:AlignCtrl g \/[*/]'zk\tW@:'y,'zs/^\(\s*\) @/\1/e:'y,'zs/ @//eg\WE
-nmap <silent> \acom \WS:'a,.s/\/[*/]/@&@/e:'a,.s/\*\//@&/e'zk\tW@:'y,'zs/^\(\s*\) @/\1/e:'y,'zs/ @//eg\WE
-nmap <silent> \abox \WS:let b:alignmaps_iws=substitute(getline("'a"),'^\(\s*\).*$','\1','e'):'a,'z-1s/^\s\+//e:'a,'z-1s/^.*$/@&@/:AlignCtrl m=p01P0w @:'a,.Align:'a,'z-1s/@/ * /:'a,'z-1s/@$/*/'aYP:s/./*/g0r/'zkYp:s/./*/g0r A/:exe "'a-1,'z-1s/^/".b:alignmaps_iws."/e"\WE
-nmap <silent> \a, \WS:'y,'zs/\(.\)\s\+/\1 /g'yjma'zk\jnr,:silent 'y,'zg/,/let @x=substitute(getline(line(".")),'^\(.\{-}\) \S\+\s*,.*$','silent s/,/;\\r\1 /g','')|@x\WE
 nmap <silent> \a? \WS:AlignCtrl mIp1P1lC ? : : : : :'a,.Align:'a,'z-1s/\(\s\+\)? /?\1/e\WE
+nmap <silent> \a, \WS:'y,'zs/\(.\)\s\+/\1 /g'yjma'zk\jnr,:silent 'y,'zg/,/let @x=substitute(getline(line(".")),'^\(.\{-}\) \S\+\s*,.*$','silent s/,/;\\r\1 /g','')|@x\WE
+nmap <silent> \abox \WS:let b:alignmaps_iws=substitute(getline("'a"),'^\(\s*\).*$','\1','e'):'a,'z-1s/^\s\+//e:'a,'z-1s/^.*$/@&@/:AlignCtrl m=p01P0w @:'a,.Align:'a,'z-1s/@/ * /:'a,'z-1s/@$/*/'aYP:s/./*/g0r/'zkYp:s/./*/g0r A/:exe "'a-1,'z-1s/^/".b:alignmaps_iws."/e"\WE
+nmap <silent> \acom \WS:'a,.s/\/[*/]/@&@/e:'a,.s/\*\//@&/e'zk\tW@:'y,'zs/^\(\s*\) @/\1/e:'y,'zs/ @//eg\WE
+nmap <silent> \ascom \WS:'a,.s/\/[*/]/@&@/e:'a,.s/\*\//@&/e:silent! 'a,.g/^\s*@\/[*/]/s/@//ge:AlignCtrl v ^\s*\/[*/]:AlignCtrl g \/[*/]'zk\tW@:'y,'zs/^\(\s*\) @/\1/e:'y,'zs/ @//eg\WE
+nmap <silent> \adec \WS:'a,'zs/\([^ \t/(]\)\([*&]\)/\1 \2/e:'y,'zv/^\//s/\([^ \t]\)\s\+/\1 /ge:'y,'zv/^\s*[*/]/s/\([^/][*&]\)\s\+/\1/ge:'y,'zv/^\s*[*/]/s/^\(\s*\%(\h\w*\s\+\%([a-zA-Z_*(&]\)\@=\)\+\)\([*(&]*\)\s*\([a-zA-Z0-9_()]\+\)\s*\(\(\[.\{-}]\)*\)\s*\(=\)\=\s*\(.\{-}\)\=\s*;/\1@\2#@\3\4@\6@\7;@/e:'y,'zv/^\s*[*/]/s/\*\/\s*$/@*\//e:'y,'zv/^\s*[*/]/s/^\s\+\*/@@@@@* /e:'y,'zv/^\s*[*/]/s/^@@@@@\*\(.*[^*/]\)$/&@*/e'yjma'zk:AlignCtrl v ^\s*[*/#]\t@:'y,'zv/^\s*[*/]/s/@ //ge:'y,'zv/^\s*[*/]/s/\(\s*\);/;\1/e:'y,'zv/^#/s/# //e:'y,'zv/^\s\+[*/#]/s/\([^/*]\)\(\*\+\)\( \+\)/\1\3\2/e:'y,'zv/^\s\+[*/#]/s/\((\+\)\( \+\)\*/\2\1*/e:'y,'zv/^\s\+[*/#]/s/^\(\s\+\) \*/\1*/e:'y,'zv/^\s\+[*/#]/s/[ \t@]*$//e:'y,'zs/^[*]/ */e\WE
+nmap <silent> \adef \WS:AlignPush:AlignCtrl v ^\s*\(\/\*\|\/\/\):'a,.v/^\s*\(\/\*\|\/\/\)/s/^\(\s*\)#\(\s\)*define\s*\(\I[a-zA-Z_0-9(),]*\)\s*\(.\{-}\)\($\|\/\*\)/#\1\2define @\3@\4@\5/e:'a,.v/^\s*\(\/\*\|\/\/\)/s/\($\|\*\/\)/@&/e'zk\t@'yjma'zk:'a,.v/^\s*\(\/\*\|\/\/\)/s/ @//g\WE
+nmap <silent> \anum \WS:'a,'zs/\(\d\)\s\+\(-\=[.,]\=\d\)/\1@\2/ge:AlignCtrl mp0P0:'a,'zAlign [.,@]:'a,'zs/\([-0-9.,]*\)\(\s*\)\([.,]\)/\2\1\3/g:'a,'zs/@/ /ge\WE
+nmap <silent> \Htd \WS:'y,'zs%<[tT][rR]><[tT][dD][^>]\{-}>\|</[tT][dD]><[tT][dD][^>]\{-}>\|</[tT][dD]></[tT][rR]>%@&@%g'yjma'zk:AlignCtrl m=Ilp1P0 @:'a,.Align:'y,'zs/ @/@/:'y,'zs/@ <[tT][rR]>/<[tT][rR]>/ge:'y,'zs/@//ge\WE
+nmap <silent> \T| \WS:AlignCtrl mIp0P0=r |:'a,.Align\WE
+nmap <silent> \T, \WS:AlignCtrl mIp0P1=r ,:'a,.Align\WE
+nmap <silent> \Ts, \WS:AlignCtrl mIp0P1=r ,:'a,.Align:'a,.s/\(\s*\),/,\1/ge\WE
+nmap <silent> \T: \WS:AlignCtrl mIp1P1=r ::'a,.Align\WE
+nmap <silent> \T< \WS:AlignCtrl mIp0P0=r <:'a,.Align\WE
+nmap <silent> \T= \WS:'a,'z-1s/\s\+\([*/+\-%|&\~^]\==\)/ \1/e:'a,'z-1s@ \+\([*/+\-%|&\~^]\)=@\1=@ge:'a,'z-1s/; */;@/e:'a,'z-1s/==/``/ge:'a,'z-1s/!=/!`/ge:AlignCtrl mIp1P1=r = @:AlignCtrl g =:'a,'z-1Align:'a,'z-1s/; *@/;/e:'a,'z-1s/; *$/;/e:'a,'z-1s@\([*/+\-%|&\~^]\)\( \+\)=@\2\1=@ge:'a,'z-1s/\( \+\);/;\1/ge:'a,'z-1s/`/=/ge\WE\acom
+nmap <silent> \T@ \WS:AlignCtrl mIp0P0=r @:'a,.Align\WE
+nmap <silent> \Tsp \WS:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\s\+','@','g'),'\')/:AlignCtrl mI=r @:'a,.Align:'y+1,'z-1s/@/ /g\WE
+nmap <silent> \t| \WS:AlignCtrl mIp0P0=l |:'a,.Align\WE
+nmap <silent> \t, \WS:AlignCtrl mIp0P1=l ,:'a,.Align\WE
+nmap <silent> \ts, \WS:AlignCtrl mIp0P0=l ,:'a,.Align:'a,.s/\(\s*\),/,\1/ge\WE
+nmap <silent> \t: \WS:AlignCtrl mIp1P1=l ::'a,.Align\WE
+nmap <silent> \t; \WS:AlignCtrl mIp0P0=l ;:'a,.Align:.,'zs/ \( *\);/;\1/ge\WE
+nmap <silent> \t< \WS:AlignCtrl mIp0P0=l <:'a,.Align\WE
+nmap <silent> \t= \WS:'a,'zs/\s\+\([*/+\-%|&\~^]\==\)/ \1/e:'a,'zs@ \+\([*/+\-%|&\~^]\)=@\1=@ge:'a,'zs/==/``/ge:'a,'zs/!=/!`/ge'zk:AlignCtrl mIp1P1=l =:AlignCtrl g =:'a,'z-1Align:'a,'z-1s@\([*/+\-%|&\~^!=]\)\( \+\)=@\2\1=@ge:'a,'z-1s/\( \+\);/;\1/ge:'a,'z-1v/^\s*\/[*/]/s/\/[*/]/@&@/e:'a,'z-1v/^\s*\/[*/]/s/\*\//@&/e'zk\t@:'y,'zs/^\(\s*\) @/\1/e:'a,'z-1s/`/=/ge:'y,'zs/ @//eg\WE
+nmap <silent> \t? \WS:AlignCtrl mIp0P0=l ?:'a,.Align:.,'zs/ \( *\);/;\1/ge\WE
+nmap <silent> \tab \WS:'a,.s/^\(\t*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\t','@','g'),'\')/:AlignCtrl mI=l @:'a,.Align:'y+1,'z-1s/@/ /g\WE
+nmap <silent> \tsp \WS:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).escape(substitute(submatch(2),'\s\+','@','g'),'\')/:AlignCtrl mI=l @:'a,.Align:'y+1,'z-1s/@/ /g\WE
+nmap <silent> \tsq \WS:'a,.ReplaceQuotedSpaces:'a,.s/^\(\s*\)\(.*\)/\=submatch(1).substitute(submatch(2),'\s\+','@','g')/:AlignCtrl mIp0P0=l @:'a,.Align:'y+1,'z-1s/[%@]/ /g\WE
+nmap <silent> \tt \WS:AlignCtrl mIp1P1=l \\\@<!& \\\\:'a,.Align\WE
+nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 nmap \sh <Plug>DBHistory
 nmap \slv <Plug>DBListView
 nmap \slp <Plug>DBListProcedure
@@ -274,10 +274,13 @@ set printoptions=paper:letter
 set ruler
 set runtimepath=~/.vim,/var/lib/vim/addons,/usr/share/vim/vimfiles,/usr/share/vim/vim74,/usr/share/vim/vimfiles/after,/var/lib/vim/addons/after,~/.vim/after
 set sessionoptions=blank,buffers,curdir,folds,help,options,tabpages,winsize,unix,slash
+set shiftwidth=4
 set shortmess=aoO
 set showcmd
+set softtabstop=4
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc
 set swapsync=
+set tabstop=4
 set winminheight=0
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
@@ -287,7 +290,7 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +823 daldon.c
+badd +1122 daldon.c
 badd +1 makefile
 badd +2 rules.h
 badd +341 daldon_old.c
@@ -299,6 +302,76 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
+lnoremap <buffer> # ё
+lnoremap <buffer> $ Ё
+lnoremap <buffer> % ъ
+lnoremap <buffer> + Ч
+lnoremap <buffer> = ч
+lnoremap <buffer> A А
+lnoremap <buffer> B Б
+lnoremap <buffer> C Ц
+lnoremap <buffer> D Д
+lnoremap <buffer> E Е
+lnoremap <buffer> F Ф
+lnoremap <buffer> G Г
+lnoremap <buffer> H Х
+lnoremap <buffer> I И
+lnoremap <buffer> J Й
+lnoremap <buffer> K К
+let s:cpo_save=&cpo
+set cpo&vim
+lnoremap <buffer> L Л
+lnoremap <buffer> M М
+lnoremap <buffer> N Н
+lnoremap <buffer> O О
+lnoremap <buffer> P П
+lnoremap <buffer> Q Я
+lnoremap <buffer> R Р
+lnoremap <buffer> S С
+lnoremap <buffer> T Т
+lnoremap <buffer> U У
+lnoremap <buffer> V Ж
+lnoremap <buffer> W В
+lnoremap <buffer> X Ь
+lnoremap <buffer> Y Ы
+lnoremap <buffer> Z З
+lnoremap <buffer> [ ш
+lnoremap <buffer> \ э
+lnoremap <buffer> ] щ
+lnoremap <buffer> ^ Ъ
+lnoremap <buffer> ` ю
+lnoremap <buffer> a а
+lnoremap <buffer> b б
+lnoremap <buffer> c ц
+lnoremap <buffer> d д
+lnoremap <buffer> e е
+lnoremap <buffer> f ф
+lnoremap <buffer> g г
+lnoremap <buffer> h х
+lnoremap <buffer> i и
+lnoremap <buffer> j й
+lnoremap <buffer> k к
+lnoremap <buffer> l л
+lnoremap <buffer> m м
+lnoremap <buffer> n н
+lnoremap <buffer> o о
+lnoremap <buffer> p п
+lnoremap <buffer> q я
+lnoremap <buffer> r р
+lnoremap <buffer> s с
+lnoremap <buffer> t т
+lnoremap <buffer> u у
+lnoremap <buffer> v ж
+lnoremap <buffer> w в
+lnoremap <buffer> x ь
+lnoremap <buffer> y ы
+lnoremap <buffer> z з
+lnoremap <buffer> { Ш
+lnoremap <buffer> | Э
+lnoremap <buffer> } Щ
+lnoremap <buffer> ~ Ю
+let &cpo=s:cpo_save
+unlet s:cpo_save
 setlocal keymap=russian-yawerty
 setlocal noarabic
 setlocal autoindent
@@ -377,10 +450,10 @@ setlocal norelativenumber
 setlocal norightleft
 setlocal rightleftcmd=search
 setlocal noscrollbind
-setlocal shiftwidth=8
+setlocal shiftwidth=4
 setlocal noshortname
 setlocal nosmartindent
-setlocal softtabstop=0
+setlocal softtabstop=4
 setlocal nospell
 setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
@@ -392,7 +465,7 @@ setlocal synmaxcol=3000
 if &syntax != 'c'
 setlocal syntax=c
 endif
-setlocal tabstop=8
+setlocal tabstop=4
 setlocal tags=
 setlocal textwidth=0
 setlocal thesaurus=
@@ -401,12 +474,14 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 826 - ((19 * winheight(0) + 20) / 40)
+1
+normal! zo
+let s:l = 1187 - ((0 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-826
-normal! 011|
+1187
+normal! 05|
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

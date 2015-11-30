@@ -43,7 +43,7 @@ struct context {
 typedef struct context context;
 
 struct letter {
-    unsigned char c;
+    unsigned int c;
     size_t cnt;
 };
 
@@ -55,11 +55,29 @@ struct ngram {
 };
 typedef struct ngram ngram;
 
+typedef struct page {
+    size_t pos;
+    elem *ptr;
+    ar *ngrams;
+    ngram *dominant;
+} page;
+
+typedef struct {
+    ar *subclusters;
+    Hash_Table *subgrams;
+    int contains_pages;
+    ngram *dominant;
+} cluster;
+
+typedef struct {
+    size_t count;
+    ngram *ngram;
+} counter;
+
 struct entry {
     ngram *n;
     elem *pos;
 };
-
 typedef struct entry entry;
 
 struct pair {
@@ -73,12 +91,11 @@ typedef struct pair pair;
 
 struct statistics {
     struct letter *letter_count;
-    size_t         nletters;
     struct pair    pairs[256];
     size_t         npair;
     size_t         size;
     char          *buffer;
-    size_t         diclen;
+    size_t         nwords;
 } doc_stat;
 
 //FILE *errata;
@@ -88,9 +105,11 @@ size_t next_id;
 elem *text;
 ar *ngrams;
 ar *dic;
-Hash_Table *ngramsh;
 ar *pairs;
 ar *gc;
+ar *pages;
+Hash_Table *ngramsh;
+FILE *fp, *fout, *dout;
 
 int sign(int x) {
     return (x>0)-(x<0);
@@ -462,6 +481,38 @@ int _ngram_cratio_compar(const void *a, const void *b) {
     return (calc_compr_ratio(bb) - calc_compr_ratio(aa)) * 1000;
 }
 
+int _ngram_npages_compar1(const void *a, const void *b) {
+    ngram *bb = (*((ngram **)b)), *aa = (*((ngram **)a));
+    return aa->mess - bb->mess;
+}
+
+int _ngram_npages_compar2(const void *a, const void *b) {
+    ngram *bb = (*((ngram **)b)), *aa = (*((ngram **)a));
+    return bb->mess - aa->mess;
+}
+
+int pagecmp(ar *a, ar *b, int idx) {
+    if (idx == a->len || idx == b->len)
+        return a->len - b->len;
+    else {
+        ngram *na = a->data[idx];
+        ngram *nb = b->data[idx];
+        if (na != nb)
+            return sign(na->mess - nb->mess) * 2 + sign((int)na - (int)nb);
+        else return pagecmp(a, b, idx + 1);
+    }
+}
+
+int _page_ngram_compar1(const void *a, const void *b) {
+    page *bb = (*((page **)b)), *aa = (*((page **)a));
+    return pagecmp(aa->ngrams, bb->ngrams, 0);
+}
+
+int _page_ngram_compar2(const void *a, const void *b) {
+    page *bb = (*((page **)b)), *aa = (*((page **)a));
+    return pagecmp(bb->ngrams, aa->ngrams, 0);
+}
+
 int _ngram_save_compar(const void *a, const void *b) {
     ngram *bb = (*((ngram **)b)), *aa = (*((ngram **)a));
     return (calc_save(bb) - calc_save(aa)) * 1000;
@@ -476,6 +527,14 @@ int _ngram_compar(const void *a, const void *b) {
 int _ngram_compar_ord(const void *a, const void *b) {
     ngram *bb = (*((ngram **)b)), *aa = (*((ngram **)a));
     return sign(bb->order - aa->order) + sign(bb->count - aa->count) * 4;
+}
+
+int _ngram_compar_count(const void *a, const void *b) {
+    ngram *bb = (*((ngram **)b)), *aa = (*((ngram **)a));
+    if (bb->order == aa->order)
+        return strncmp(bb->word, aa->word, aa->order) + sign(bb->count - aa->count) * 4;
+    else
+        return sign(bb->order - aa->order) + sign(bb->count - aa->count) * 4;
 }
 
 void _remove_bogus(size_t start) {
@@ -690,7 +749,7 @@ void textPrint(elem *start, FILE *fout) {
 }
 
 elem *mkdicref(int level, elem *prev, elem *next) {
-    elem *first = prev = mkelem(255, 0, prev, next, NULL, NULL, NULL);
+    elem *first = prev = mkelem(256 + level, 0, prev, next, NULL, NULL, NULL);
     ar_add(gc, first);
     first->tail = prev;
     return first;
@@ -749,7 +808,7 @@ int loglog(int N) {
     return exp(log(N)/(1+log(N)/(1+log(N))));
 }
 
-elem *compr2(elem *start) {
+void compr2(elem **start) {
     dic = new_ar();
     int orig_size = doc_stat.size;
     int level = 0;
@@ -757,7 +816,7 @@ elem *compr2(elem *start) {
     //size_t comprlen = 0;
     //int i; for (i = 0; i < ngrams->len; i++) {
     ar *matches = new_ar();
-    int cursor = 0, cursor_backup, dryrun = 0;
+    int cursor = 0, cursor_backup = 0, dryrun = 0;
     ngram *n = ngrams->data[cursor++];
     while (cursor < ngrams->len && calc_compr_ratio(n) > 1) {
         //show_ngram(n);
@@ -806,16 +865,17 @@ elem *compr2(elem *start) {
                 } else {
                    //fprintf(stderr, " |-> EOF ***\n");
                 }
-                elem *dicref = mkdicref(level, pos->prev, sign);
+                elem *dicref = mkdicref(dic->len, pos->prev, sign);
                 if (pos->prev != NULL)
                     pos->prev->next = dicref;
-                else start = dicref;
+                else *start = dicref;
                 if (sign != NULL)
                     sign->prev = dicref->tail;
                //fprintf(stderr, "\n----------------\n");
                 doc_stat.size = doc_stat.size - n->order + 1;
             }
             ar_add(dic, new_ngram(n->word, n->order, n->count));
+            doc_stat.nwords += n->count;
             //recalc_counts(n);
         }
         int xflag = 0;
@@ -877,7 +937,6 @@ elem *compr2(elem *start) {
     }
     fprintf(stderr, "\n================ %d) WAS: %d NOW: %d (%d) RATIO: %d "
             "==================\n", level, orig_size, doc_stat.size, dic->len, orig_size / doc_stat.size);
-    return start;
 }
 
 ngram *joined(ngram *a, ngram *b) {
@@ -981,6 +1040,318 @@ void struct_explore(FILE *fp) {
     //show_ngrams(0, 1);
 }
 
+int determine_chunksize(size_t L, size_t Sigma) {
+    double guess = 1;
+    while (guess != (int)((L*log(L)+(1-log(guess))*L)/(L-Sigma) + 0.5)) {
+        //fprintf(stderr, "*** %d ***\n", (int)(L*log(L)+(1-log(guess))*L)/(L-Sigma));
+        ++guess;
+    }
+    return guess;
+}
+
+page *new_page(size_t pos, elem *ptr, ar *ngrams) {
+    page *p = malloc(sizeof(page));
+    p->pos = pos;
+    p->ptr = ptr;
+    p->ngrams = ngrams;
+    return p;
+}
+
+cluster *new_cluster(ngram *dominant, ar *subclusters, size_t htlen, int contains_pages) {
+    cluster *c = malloc(sizeof(cluster));
+    c->dominant = dominant;
+    c->subclusters = subclusters;
+    c->contains_pages = contains_pages;
+    c->subgrams = malloc(sizeof(Hash_Table));
+    Hash_InitTable(c->subgrams, htlen);
+    return c;
+}
+
+void text2pages(elem *text) {
+    int pos = 0;
+    elem *pgstart = text;
+    //int chunksize = determine_chunksize(doc_stat.nwords, dic->len);
+    int chunksize = 256;
+    pages = new_ar();
+    Hash_Table uwords;
+    Hash_InitTable(&uwords, chunksize);
+    page *pg = new_page(pos++, pgstart, new_ar());
+    while (text != NULL) {
+        if (text->sym > 255) {
+            ngram *n = dic->data[text->sym - 256];
+            Hash_Entry *e = Hash_FindEntry(&uwords, n->word, n->order);
+            if (e != NULL) {
+                ++(*(int *)Hash_GetValue(e));
+                text = text->next;
+            } else if (uwords.numEntries == chunksize) {
+                Hash_DeleteTable(&uwords);
+                Hash_InitTable(&uwords, chunksize);
+                ar_add(pages, pg);
+                pg = new_page(pos++, pgstart, new_ar());
+                if (pgstart->prev != NULL)
+                    pgstart->prev->next = NULL;
+            } else {
+                ++n->mess;
+                ar_add(pg->ngrams, n);
+                pgstart = text = text->next; // pgstart will be used if numEntries crosses the line.
+                e = Hash_CreateEntry(&uwords, n->word, n->order, NULL);
+                int *counter = malloc(sizeof(int));
+                ar_add(gc, counter);
+                *counter = 1;
+                Hash_SetValue(e, counter);
+            }
+        } else {
+            text = text->next;
+        }
+    }
+    Hash_DeleteTable(&uwords);
+    ar_add(pages, pg);
+    fprintf(stderr, "*** %d pages by %d urefs add %f bytes ***\n", pages->len, chunksize, pages->len * log(pages->len) / 8);
+}
+
+counter *new_counter(size_t count, ngram *n) {
+    counter *c = malloc(sizeof(counter));
+    c->count = count;
+    c->ngram = n;
+    return c;
+}
+
+
+void _increase_hash_cnt(Hash_Table *ht, ngram *n) {
+    int is_new;
+    Hash_Entry *e = Hash_CreateEntry(ht, n->word, n->order, &is_new);
+    if (is_new) {
+        counter *c = new_counter(1, n);
+        Hash_SetValue(e, c);
+    } else {
+        counter *c = Hash_GetValue(e);
+        ++c->count;
+    }
+}
+
+cluster *cluster_pages(ar *clusters, int contains_pages) {
+    if (clusters->len == 1) return clusters->data[0];
+    Hash_Table ngrams;
+    Hash_InitTable(&ngrams, dic->len);
+    ar *percluster = new_ar();
+    Hash_Entry *e; Hash_Search ptr;
+    int i; for (i = 0; i < clusters->len; i++) {
+        Hash_Table *ht = malloc(sizeof(Hash_Table));
+        ar_add(percluster, ht);
+        Hash_InitTable(ht, 100);
+        if (contains_pages) {
+            page *p = clusters->data[i];
+            elem *el = p->ptr;
+            while (el != NULL) {
+                if (el->sym > 255) {
+                    ngram *n = dic->data[el->sym - 256];
+                    _increase_hash_cnt(&ngrams, n);
+                    _increase_hash_cnt(ht, n);
+                }
+                el = el->next;
+            }
+        } else {
+            cluster *cl = clusters->data[i];
+            for (e = Hash_EnumFirst(cl->subgrams, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+                ngram *n = Hash_GetValue(e);
+                _increase_hash_cnt(&ngrams, n);
+                _increase_hash_cnt(ht, n);
+            }
+        }
+    }
+    Hash_Table groups;
+    Hash_InitTable(&groups, 100);
+    for (i = 0; i < percluster->len; i++) {
+        Hash_Table *ht = percluster->data[i];
+        double bestrate = 0.0;
+        ngram *best = NULL;
+        for (e = Hash_EnumFirst(ht, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+            counter *c = Hash_GetValue(e);
+            Hash_Entry *ee = Hash_FindEntry(&ngrams, c->ngram->word, c->ngram->order);
+            counter *cc = Hash_GetValue(ee);
+            if (cc->count > 1) {
+                double tf_idf = (double)c->count / (double)cc->count;
+                if (tf_idf > bestrate) {
+                    bestrate = tf_idf;
+                    best = c->ngram;
+                }
+            }
+            free(c);
+        }
+        Hash_DeleteTable(ht);
+        int is_new;
+        e = Hash_CreateEntry(&groups, best->word, best->order, &is_new);
+        cluster *clust;
+        if (is_new) {
+            clust = new_cluster(best, new_ar(), 10, contains_pages);
+            Hash_SetValue(e, clust);
+        } else {
+            clust = Hash_GetValue(e);
+        }
+        ar_add(clust->subclusters, clusters->data[i]);
+        if (contains_pages) {
+            page *p = clusters->data[i];
+            ar *subgrams = p->ngrams;
+            int j; for (j = 0; j < subgrams->len; j++) {
+                ngram *n = subgrams->data[j];
+                e = Hash_CreateEntry(clust->subgrams, n->word, n->order, &is_new);
+                if (is_new)
+                    Hash_SetValue(e, n);
+            }
+        } else {
+            cluster *cl = clusters->data[i];
+            for (e = Hash_EnumFirst(cl->subgrams, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+                ngram *n = Hash_GetValue(e);
+                Hash_Entry *ee = Hash_CreateEntry(clust->subgrams, n->word, n->order, &is_new);
+                if (is_new)
+                    Hash_SetValue(ee, n);
+            }
+        }
+    }
+    for (e = Hash_EnumFirst(&ngrams, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+        free(Hash_GetValue(e));
+    }
+    Hash_DeleteTable(&ngrams);
+    free_ar(percluster);
+    ar *subclusters = new_ar();
+    for (e = Hash_EnumFirst(&groups, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+        ar_add(subclusters, Hash_GetValue(e));
+    }
+    Hash_DeleteTable(&groups);
+    free_ar(clusters);
+    return cluster_pages(subclusters, 0);
+}
+
+ar *cluster2ar(ar *a, cluster *c) {
+    int i;
+    if (c->contains_pages) for (i = 0; i < c->subclusters->len; i++) {
+        ar_add(a, c->subclusters->data[i]);
+    } else for (i = 0; i < c->subclusters->len; i++) {
+        cluster2ar(a, c->subclusters->data[i]);
+    }
+    return a;
+}
+
+void sort_pages1() {
+    int i; for (i = 0; i < pages->len; i++) {
+        ar_sort(((page *)pages->data[i])->ngrams, _ngram_npages_compar1);
+    }
+    ar_sort(pages, _page_ngram_compar1);
+}
+
+void sort_pages2() {
+    int i; for (i = 0; i < pages->len; i++) {
+        ar_sort(((page *)pages->data[i])->ngrams, _ngram_npages_compar1);
+    }
+    ar_sort(pages, _page_ngram_compar2);
+}
+
+void sort_pages3() {
+    int i; for (i = 0; i < pages->len; i++) {
+        ar_sort(((page *)pages->data[i])->ngrams, _ngram_npages_compar2);
+    }
+    ar_sort(pages, _page_ngram_compar1);
+}
+
+void sort_pages4() {
+    int i; for (i = 0; i < pages->len; i++) {
+        ar_sort(((page *)pages->data[i])->ngrams, _ngram_npages_compar2);
+    }
+    ar_sort(pages, _page_ngram_compar2);
+}
+
+void show_pages() {
+    int i; for (i = 0; i < pages->len; i++) {
+        page *p = pages->data[i];
+        fprintf(stderr, "*** page # %d ***\n", p->pos);
+        int j; for (j = 0; j < p->ngrams->len; j++) {
+            ngram *n = p->ngrams->data[j];
+            fprintf(stderr, "%d ", n->mess);
+            //fprintf(stderr, "%p ", n);
+        }
+        fprintf(stderr, "\n");
+        elem *el = p->ptr;
+        while (el != NULL) {
+            fputc(((el->sym < 255)? el->sym: '^'), stderr);
+            el = el->next;
+        }
+        fprintf(stderr, "\n");
+    }
+}
+
+void _update_model(ar *model, Hash_Table *ht) {
+    Hash_Search ptr;
+    Hash_Entry *e;
+    model->len = 0;
+    for (e = Hash_EnumFirst(ht, &ptr); e != NULL; e = Hash_EnumNext(&ptr)) {
+        ar_add(model, Hash_GetValue(e));
+    }
+    ar_sort(model, _ngram_compar_count);
+    int i; for (i = 0; i < model->len; i++) {
+        ngram *n = model->data[i];
+        if (i < 255) {
+            n->mess = i;
+        } else {
+            Hash_DeleteEntry(ht, Hash_FindEntry(ht, n->word, n->order));
+        }
+    }
+    if (model->len > 256)
+        model->len = 256;
+}
+
+void encode_pages() {
+    double cost = 0;
+    int count = 0;
+    int maxwidth = 0;
+    Hash_Table dihash;
+    Hash_InitTable(&dihash, dic->len);
+    ar *model = new_ar();
+    int i; for (i = 0; i < pages->len; i++) {
+        page *pg = pages->data[i];
+        elem *el = pg->ptr;
+        int junk_mode = 0;
+        while (el != NULL) {
+            if (el->sym > 255) {
+                if (junk_mode) {
+                    junk_mode = 0;
+                    fputc('"', fout);
+                }
+                ++count;
+                ngram *n = dic->data[el->sym - 256];
+                int is_new = 0;
+                Hash_Entry *e = Hash_CreateEntry(&dihash, n->word, n->order, &is_new);
+                if (is_new) {
+                    fputc('\'', fout);
+                    int j; for (j = 0; j < n->order; j++) {
+                        fputc(n->word[j], fout);
+                    }
+                    fprintf(fout, "'%x'", --n->count);
+                    Hash_SetValue(e, n);
+                    _update_model(model, &dihash);
+                } else {
+                    cost += log(dihash.numEntries);
+                    maxwidth = ((maxwidth < n->mess)? n->mess: maxwidth);
+                    //fprintf(stderr, "*** DICREF PG: %d DICSZ: %d ***\n", pg->pos, dihash.numEntries);
+                    if (--n->count == 0) {
+                        Hash_DeleteEntry(&dihash, e);
+                    }
+                    fputc(n->mess, fout);
+                    _update_model(model, &dihash);
+                }
+            } else {
+                if (!junk_mode) {
+                    junk_mode = 1;
+                    //fputc('"', fout);
+                }
+                fputc(el->sym, fout);
+            }
+            el = el->next;
+        }
+    }
+    //show_pages();
+    fprintf(stderr, "*** REFS: %d FULL: %f COST: %f MAXWIDTH: %d ***\n", count, log(count)*count/8.0, cost/8.0, maxwidth);
+}
+
 void compr_rec(FILE *fp) {
     gc = new_ar();
     count_letters(fp);
@@ -990,7 +1361,19 @@ void compr_rec(FILE *fp) {
     //show_ngrams(0, 100);
     text = mktext(doc_stat.buffer, doc_stat.size);
     fprintf(stderr, "*** size: %d ngrams: %d ***\n", doc_stat.size, ngrams->len);
-    compr2(text);
+    compr2(&text);
+    text2pages(text);
+    encode_pages();
+    //sort_pages1();
+    //encode_pages();
+    //sort_pages2();
+    //encode_pages();
+    //pages = cluster2ar(new_ar(), cluster_pages(pages, 1));
+    //encode_pages();
+    //sort_pages3();
+    //encode_pages();
+    //sort_pages4();
+    //encode_pages();
 }
 
 void gcollect() {
@@ -1025,14 +1408,16 @@ void dicPrint(FILE *fout) {
 
 int main () {
     next_id =  1e8;
-    FILE *fp = fopen("2k", "r");
-    FILE *fout = fopen("rules.c", "w");
-    FILE *dout = fopen("rules.h", "w");
+    fp = fopen("2k", "r");
+    fout = fopen("rules.c", "w");
+    dout = fopen("rules.h", "w");
     //struct_explore(fp);
     compr_rec(fp);
     //show_dic(0, 0);
-    dicPrint(dout);
-    textPrint(text, fout);
+    //
+    //dicPrint(dout);
+    //textPrint(text, fout);
+    //
     //fwrite(doc_stat.buffer, 1, doc_stat.size, fout);
     //explore(fp,new("empty"));
     //struct_explore(fp);
